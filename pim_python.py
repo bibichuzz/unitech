@@ -367,9 +367,68 @@ try:
                         show_professor_disc(disciplina_adm)
                     print("< Voltar")
                 
-                resposta_disciplinas = input("Digite o ID da disciplina desejada: ").upper()
+                if usuario_sistema["cargo"] == "professor":
+                    resposta_disciplinas = input("\nDigite o ID da disciplina desejada ou + para gerar um relatório de presença: ").upper()
+                else:
+                    resposta_disciplinas = input("Digite o ID da disciplina desejada: ").upper()
                 if resposta_disciplinas == "<":
                     continue
+                
+                elif resposta_disciplinas == "+" and usuario_sistema["cargo"] == "professor":
+                    os.system("cls")
+                    print("\n--- RELATÓRIO DE PRESENÇA ---")
+                    
+                    for id_prof, info_usuario in dados_users.items():
+                        if info_usuario == usuario_sistema:
+                            id_prof_logado = id_prof
+                            break # ID encontrado, podemos sair do loop
+                    for disciplina_prof in dados_disciplinas:
+                        if id_prof_logado == dados_disciplinas[disciplina_prof]["professor"]:
+                            show_professor_disc(disciplina_prof)
+                    print("< Voltar")
+                    disc_relatorio = input("\nDigite o ID da disciplina a ser impressa: ").upper()
+            
+                    if disc_relatorio in dados_disciplinas:
+                        turmas_disciplina = []
+                        for turma_cadastrada in dados_turmas:
+                                if dados_turmas[turma_cadastrada]["curso"] == dados_disciplinas[disc_relatorio]["curso"]:
+                                    turmas_disciplina.append(turma_cadastrada)
+
+                        if len(turmas_disciplina) > 0:
+                            print("\nTurmas cadastradas:")
+                            for turma_cadastrada in dados_turmas:
+                                if dados_turmas[turma_cadastrada]["curso"] == dados_disciplinas[disc_relatorio]["curso"]:
+                                    print(f"Turma {turma_cadastrada}: {dados_turmas[turma_cadastrada]["curso"].capitalize()}, {dados_turmas[turma_cadastrada]["semestre"]}º semestre.")
+                            turma_relatorio = input("\nDigite o nome da turma a ser impressa: ").upper()
+
+                            if turma_relatorio in dados_turmas:
+                                print(f"\nTurma {turma_relatorio}: {dados_turmas[turma_relatorio]["curso"].capitalize()}, {dados_turmas[turma_relatorio]["semestre"]}º semestre.")
+                                while True:
+                                    data_presenca = input("Digite a data do relatório (dd/mm/aaaa): ")
+                                    padrao_data = r"^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/\d{4}$"
+
+                                    if re.match(padrao_data, data_presenca):
+                                        break
+                                    else:
+                                        print("Digite uma data válida!")
+                                print("Imprimindo relatório...")
+                                alunos_turma_relatorio = []
+                                alunos_turma_relatorio.append(data_presenca)
+                                for aluno_turma in dados_users:
+                                    if dados_users[aluno_turma]["turma"] == turma_relatorio and dados_users[aluno_turma]["cargo"] == "aluno":
+                                        alunos_turma_relatorio.append(f"{dados_users[aluno_turma]["nome"]} - {dados_users[aluno_turma]["matricula"]}")
+                                alunos_turma_relatorio.sort()
+                                alunos_turma_relatorio.append(f"Turma {turma_relatorio}, curso {dados_turmas[turma_relatorio]["curso"].capitalize()}, {dados_turmas[turma_relatorio]["semestre"]}º semestre")
+                                alunos_turma_relatorio.append(f"{turma_relatorio}_{data_presenca.replace("/","")}")
+                                subprocess.run(["output/relatorio_presenca.exe"] + alunos_turma_relatorio)
+                            else:
+                                print("Digite uma turma válida!")
+                        else:
+                            print("Não há nenhuma turma cadastrada!")
+                    else:
+                        ("Digite uma disciplina válida!")
+
+
                 elif resposta_disciplinas in dados_disciplinas:
                     os.system("cls")
                     print(f"----- {dados_disciplinas[resposta_disciplinas]["nome"].upper()} -----")
@@ -562,8 +621,7 @@ try:
                 print("2. Cadastrar turmas")
                 print("3. Atualizar turmas")
                 print("4. Excluir turmas")
-                print("5. Gerar relatório de presença")
-                print("6. Voltar")
+                print("5. Voltar")
                 resposta_turmas = int(input("Digite a opção desejada: "))
 
                 if resposta_turmas == 1:
@@ -655,43 +713,6 @@ try:
                     else:
                         print("Não há nenhuma turma cadastrada!")
 
-                if resposta_turmas == 5:
-                    os.system("cls")
-                    print("\n--- RELATÓRIO DE PRESENÇA ---")
-                    if len(dados_turmas) > 0:
-                        print("\nTurmas cadastradas:")
-                        for turma_cadastrada in dados_turmas:
-                            print(f"Turma {turma_cadastrada}: {dados_turmas[turma_cadastrada]["curso"].capitalize()}, {dados_turmas[turma_cadastrada]["semestre"]}º semestre.")
-                        print("< Voltar")
-                        turma_relatorio = input("\nDigite o nome da turma a ser impressa: ").upper()
-
-                        if turma_relatorio == "<":
-                            continue
-
-                        elif turma_relatorio in dados_turmas:
-                            print(f"\nTurma {turma_relatorio}: {dados_turmas[turma_relatorio]["curso"].capitalize()}, {dados_turmas[turma_relatorio]["semestre"]}º semestre.")
-                            while True:
-                                data_presenca = input("Digite a data do relatório (dd/mm/aaaa): ")
-                                padrao_data = r"^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/\d{4}$"
-
-                                if re.match(padrao_data, data_presenca):
-                                    break
-                                else:
-                                    print("Digite uma data válida!")
-                            print("Imprimindo relatório...")
-                            alunos_turma_relatorio = []
-                            alunos_turma_relatorio.append(data_presenca)
-                            for aluno_turma in dados_users:
-                                if dados_users[aluno_turma]["turma"] == turma_relatorio and dados_users[aluno_turma]["cargo"] == "aluno":
-                                    alunos_turma_relatorio.append(f"{dados_users[aluno_turma]["nome"]} - {dados_users[aluno_turma]["matricula"]}")
-                            alunos_turma_relatorio.sort()
-                            alunos_turma_relatorio.append(f"Turma {turma_relatorio}, curso {dados_turmas[turma_relatorio]["curso"].capitalize()}, {dados_turmas[turma_relatorio]["semestre"]}º semestre")
-                            alunos_turma_relatorio.append(f"{turma_relatorio}_{data_presenca.replace("/","")}")
-                            subprocess.run(["output/relatorio_presenca.exe"] + alunos_turma_relatorio)
-                        else:
-                            print("Digite uma turma válida!")
-                    else:
-                        print("Não há nenhuma turma cadastrada!")
 
             # DISCIPLINAS
             elif resposta_login == 7 and dados_users[usuario]["admin"] == True:
