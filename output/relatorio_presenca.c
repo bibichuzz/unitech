@@ -85,4 +85,5 @@ int main(int argc, char *argv[]) {
     printf("Relatório de presença gerado!\n");
     
     return 0; // Retorna sucesso
+
 }
